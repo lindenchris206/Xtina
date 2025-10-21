@@ -1,0 +1,28 @@
+{
+  "agents": [
+    {
+      "name": "AI_1",
+      "specialties": ["text", "code"],
+      "secondarySpecialties": ["image"],
+      "knowledgeBundles": ["general", "programming"],
+      "selfImprove": true,
+      "help": ["How to write code", "Using AI agents"]
+    },
+    {
+      "name": "AI_2",
+      "specialties": ["image", "video"],
+      "secondarySpecialties": ["text"],
+      "knowledgeBundles": ["media", "design"],
+      "selfImprove": false,
+      "help": ["Creating images", "Video editing tips"]
+    },
+    {
+      "name": "AI_3",
+      "specialties": ["sound", "text"],
+      "secondarySpecialties": ["video"],
+      "knowledgeBundles": ["audio", "music"],
+      "selfImprove": false,
+      "help": ["Audio mixing", "Text-to-speech"]
+    }
+  ]
+}
