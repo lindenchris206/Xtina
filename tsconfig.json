@@ -20,6 +20,24 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"],
+  "include": ["./vite-env.d.ts", "./App.tsx", "./index.tsx", "./components/**/*.tsx", "./hooks/**/*.ts", "./services/**/*.ts", "./data/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "backend",
+    "src",
+    "copy-of-ai-crew-commander(1) (1)",
+    "ai-crew-22-main",
+    "docs",
+    "installers",
+    "best practices for large react modular software design",
+    "*.md",
+    "Agents_Voice_Module_Implementation.tsx",
+    "Agents_Voice_Module_Implementation (1).tsx",
+    "TypeScript_Module_System_Implementation.ts",
+    "create_and_zip_christina.ts",
+    "components/create_and_zip_christina.ts",
+    "*.zip"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

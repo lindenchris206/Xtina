@@ -90,7 +90,7 @@ const FileManager: React.FC<{ agents: Agent[], onAgentsUpdate: (agents: Agent[])
 };
 
 
-export const RightSidebar: React.FC<RightSidebarProps> = ({ agents, tasks, onAgentsUpdate }) => {
+export const RightSidebar: React.FC<RightSidebarProps> = ({ agents, tasks: _tasks, onAgentsUpdate }) => {
   return (
     <div className="space-y-6">
       <FileManager agents={agents} onAgentsUpdate={onAgentsUpdate} />

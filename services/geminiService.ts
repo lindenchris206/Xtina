@@ -4,9 +4,9 @@ class GeminiService {
   private ai: GoogleGenAI;
   private chat: Chat;
 
-  constructor(apiKey: string | undefined) {
+  constructor(apiKey?: string) {
     if (!apiKey) {
-      throw new Error("API_KEY environment variable not set.");
+      throw new Error("VITE_GEMINI_API_KEY environment variable not set. Please add it to your .env file.");
     }
     this.ai = new GoogleGenAI({ apiKey });
     this.chat = this.ai.chats.create({
@@ -21,7 +21,9 @@ class GeminiService {
     try {
       const result = await this.chat.sendMessageStream({ message });
       for await (const chunk of result) {
-        yield chunk.text;
+        if (chunk.text) {
+          yield chunk.text;
+        }
       }
     } catch (error) {
       console.error("Gemini API Error:", error);
@@ -30,5 +32,5 @@ class GeminiService {
   }
 }
 
-// Ensure API_KEY is available.
-export const geminiService = new GeminiService(process.env.API_KEY);
+// Ensure API_KEY is available from Vite environment
+export const geminiService = new GeminiService(import.meta.env.VITE_GEMINI_API_KEY);

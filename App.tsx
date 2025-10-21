@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { LeftSidebar } from './components/LeftSidebar';
 import { ChatWindow } from './components/ChatWindow';
 import { RightSidebar } from './components/RightSidebar';
 import { Composer } from './components/Composer';
 import { useChat } from './hooks/useChat';
-import { Agent, Task, CouncilMessage } from './types';
+import { Agent, Task } from './types';
 import io from 'socket.io-client';
 import { AnimatedBackground } from './components/AnimatedBackground';
 import { CommandPalette } from './components/CommandPalette';
