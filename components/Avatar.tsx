@@ -1,32 +1,14 @@
-// FIX: Add a global JSX type definition for the <model-viewer> custom element to resolve TypeScript errors.
+import React, { useRef, useEffect } from 'react';
+
+// Add a global JSX type definition for the <model-viewer> custom element to resolve TypeScript errors.
+// FIX: Using `any` to simplify type definition and resolve compilation error for the custom web component.
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      'model-viewer': React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          src: string;
-          alt: string;
-          'camera-controls'?: boolean;
-          'disable-zoom'?: boolean;
-          'camera-orbit'?: string;
-          'auto-rotate'?: boolean;
-          'auto-rotate-delay'?: string;
-          'rotation-per-second'?: string;
-          'shadow-intensity'?: string;
-          ar?: boolean;
-          'ar-modes'?: string;
-          // For programmatic access via ref
-          animationName?: string;
-          play?: (options: { repetitions: number }) => void;
-          model?: unknown;
-        },
-        HTMLElement
-      >;
+      'model-viewer': any;
     }
   }
 }
-
-import React, { useRef, useEffect } from 'react';
 
 interface AvatarProps {
   isSpeaking: boolean;

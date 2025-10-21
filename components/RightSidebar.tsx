@@ -1,31 +1,38 @@
 import React, { useState } from 'react';
-import { Task } from '../types';
-import { TimelineIcon } from './icons';
+import { Agent } from '../types';
+import { FileIcon, AgentIcon } from './icons';
 
 interface RightSidebarProps {
-  tasks: Task[];
+  agents: Agent[];
+  tasks: any[]; // Kept for future use, but focus is now file management
+  onAgentsUpdate: (agents: Agent[]) => void;
 }
 
-const FileUploader: React.FC = () => {
+const FileManager: React.FC<{ agents: Agent[], onAgentsUpdate: (agents: Agent[]) => void }> = ({ agents, onAgentsUpdate }) => {
     const [file, setFile] = useState<File | null>(null);
+    const [selectedAgent, setSelectedAgent] = useState<string>(agents[0]?.name || '');
     const [status, setStatus] = useState('');
 
     const handleUpload = async () => {
-        if (!file) return;
-        setStatus('Uploading...');
+        if (!file || !selectedAgent) return;
+        setStatus('Uploading & processing...');
         const formData = new FormData();
         formData.append('file', file);
+
         try {
-            // Use relative path for API endpoint to fix "Failed to fetch" errors.
-            const res = await fetch('/api/file/upload', {
+            const res = await fetch(`/api/agents/${selectedAgent}/knowledge`, {
                 method: 'POST',
                 body: formData
             });
-            const data = await res.json();
+            const updatedAgent = await res.json();
             if (res.ok) {
-                setStatus(`Success! Saved as ${data.savedAs}`);
+                setStatus(`Knowledge '${file.name}' added to ${selectedAgent}.`);
+                // Update the parent state
+                const updatedAgents = agents.map(a => a.name === selectedAgent ? updatedAgent : a);
+                onAgentsUpdate(updatedAgents);
+                setFile(null);
             } else {
-                throw new Error(data.error || 'Upload failed');
+                throw new Error(updatedAgent.error || 'Upload failed');
             }
         } catch (err: any) {
             setStatus(`Error: ${err.message}`);
@@ -34,52 +41,60 @@ const FileUploader: React.FC = () => {
 
     return (
         <div className="text-sm">
-            <h2 className="font-bold text-brand-text mb-3">File Manager</h2>
-            <div className="bg-white/5 p-3 rounded-lg">
+            <h2 className="font-bold text-[rgb(var(--color-accent))] mb-3 flex items-center gap-2 font-orbitron">
+                <FileIcon />
+                Knowledge Base
+            </h2>
+            <div className="bg-black/20 p-3 rounded-lg border border-white/5 space-y-3">
+                <p className="text-xs text-[rgb(var(--color-text-muted))]">Upload a file to an agent's knowledge base.</p>
                 <input 
                     type="file" 
                     onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-                    className="text-xs text-brand-muted file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-brand-accent/20 file:text-brand-accent hover:file:bg-brand-accent/30"
+                    className="text-xs text-[rgb(var(--color-text-muted))] w-full file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[rgb(var(--color-secondary))] file:text-white hover:file:bg-opacity-80"
                 />
+                <select 
+                    value={selectedAgent}
+                    onChange={(e) => setSelectedAgent(e.target.value)}
+                    className="w-full p-1.5 rounded-md bg-white/5 border border-white/10 text-[rgb(var(--color-text))] text-xs focus:outline-none focus:ring-1 focus:ring-[rgb(var(--color-primary))]"
+                >
+                    {agents.map(a => <option key={a.name} value={a.name}>{a.name}</option>)}
+                </select>
                 <button 
                     onClick={handleUpload} 
-                    disabled={!file}
-                    className="w-full bg-brand-accent text-white py-2 mt-3 rounded-lg font-bold text-sm hover:bg-opacity-90 transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+                    disabled={!file || !selectedAgent}
+                    className="w-full bg-[rgb(var(--color-primary))] text-black py-2 rounded-lg font-bold text-sm hover:bg-opacity-90 transition-colors disabled:bg-gray-500/50 disabled:cursor-not-allowed"
                 >
-                    Upload
+                    Upload Knowledge
                 </button>
-                {status && <p className="text-xs text-brand-muted mt-2">{status}</p>}
+                {status && <p className="text-xs text-center text-[rgb(var(--color-text-muted))] mt-2">{status}</p>}
+            </div>
+
+            <div className="mt-4">
+                {agents.filter(a => a.knowledgeBundles.length > 0).map(agent => (
+                    <div key={agent.name} className="mb-3">
+                        <h3 className="font-semibold text-xs text-[rgb(var(--color-text))] flex items-center gap-1.5">
+                            <AgentIcon/> {agent.name}
+                        </h3>
+                        <ul className="mt-1 space-y-1">
+                            {agent.knowledgeBundles.map(kb => (
+                                <li key={kb.name} className="text-xs text-[rgb(var(--color-text-muted))] bg-black/20 px-2 py-1 rounded-md truncate">
+                                    {kb.name}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ))}
             </div>
         </div>
     );
 };
 
-const TasksPanel: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
-    return (
-        <div className="text-sm">
-            <h2 className="font-bold text-brand-text mb-3">Tasks</h2>
-            <ul className="space-y-2">
-                {tasks.slice().reverse().map(task => (
-                    <li key={task.id} className="bg-white/5 p-2 rounded-md">
-                        <p className="font-medium text-brand-text truncate">{task.title || `Task ${task.id}`}</p>
-                        <p className="text-xs text-brand-muted">Agent: {task.assignedAgent || 'N/A'}</p>
-                        <p className={`text-xs font-mono ${task.status === 'done' ? 'text-green-400' : 'text-amber-400'}`}>
-                            {task.status}
-                        </p>
-                    </li>
-                ))}
-                {tasks.length === 0 && <p className="text-xs text-brand-muted">No active tasks.</p>}
-            </ul>
-        </div>
-    );
-};
 
-
-export const RightSidebar: React.FC<RightSidebarProps> = ({ tasks }) => {
+export const RightSidebar: React.FC<RightSidebarProps> = ({ agents, tasks, onAgentsUpdate }) => {
   return (
     <div className="space-y-6">
-      <FileUploader />
-      <TasksPanel tasks={tasks} />
+      <FileManager agents={agents} onAgentsUpdate={onAgentsUpdate} />
+      {/* Task panel could be added back here if needed */}
     </div>
   );
 };

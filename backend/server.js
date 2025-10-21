@@ -10,7 +10,6 @@ import fetch from 'node-fetch';
 import pdf from 'pdf-parse';
 
 import orchestrator from './orchestrator.js';
-import fileConverter from './fileConverter.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,11 +21,6 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(cors());
 app.use(express.json());
 app.use(fileUpload());
-
-// Serve Vite's static assets in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'dist')));
-}
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -66,7 +60,6 @@ app.post('/api/agents/:name/knowledge', async (req, res) => {
   try {
     await file.mv(filePath);
 
-    // Read file content for context
     let content;
     if (file.mimetype === 'application/pdf') {
         const data = await pdf(filePath);
@@ -75,7 +68,7 @@ app.post('/api/agents/:name/knowledge', async (req, res) => {
         content = fs.readFileSync(filePath, 'utf-8');
     }
     
-    const agent = orchestrator.addKnowledgeBundle(name, file.name, filePath, content.substring(0, 50000)); // Limit context size
+    const agent = orchestrator.addKnowledgeBundle(name, file.name, filePath, content.substring(0, 50000));
     if (!agent) return res.status(404).json({ error: 'Agent not found' });
     res.json(agent);
   } catch (err) {
@@ -84,8 +77,6 @@ app.post('/api/agents/:name/knowledge', async (req, res) => {
   }
 });
 
-
-// Task creation from user prompt
 app.post('/api/tasks', (req, res) => {
   const { prompt } = req.body;
   if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
@@ -94,20 +85,9 @@ app.post('/api/tasks', (req, res) => {
   res.status(202).json({ message: 'Task received' });
 });
 
-// File upload
-app.post('/api/file/upload', async (req, res) => {
-  try {
-    const result = await fileConverter.handleUpload(req);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: 'upload failed', details: String(err) });
-  }
-});
-
-// ElevenLabs TTS endpoint
 app.post('/api/speak', async (req, res) => {
   const { text } = req.body;
-  const voiceId = process.env.ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL'; // Default to Rachel
+  const voiceId = process.env.ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL';
   const apiKey = process.env.ELEVENLABS_API_KEY;
 
   if (!apiKey) {
@@ -124,10 +104,6 @@ app.post('/api/speak', async (req, res) => {
       body: JSON.stringify({
         text: text,
         model_id: 'eleven_monolingual_v1',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-        },
       }),
     });
 
@@ -146,14 +122,22 @@ app.post('/api/speak', async (req, res) => {
 
 // WebSocket connection
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
   orchestrator.registerSocket(socket);
   
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
     orchestrator.unregisterSocket(socket);
   });
 });
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+    const buildPath = path.resolve(__dirname, '..', 'dist');
+    app.use(express.static(buildPath));
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(buildPath, 'index.html'));
+    });
+}
+
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => console.log(`AI Crew Commander backend running on port ${PORT}`));

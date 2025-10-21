@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { generateImage } from './services/imageGenerator.js';
 import { GoogleGenAI } from "@google/genai";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -9,11 +8,9 @@ const __dirname = path.dirname(__filename);
 
 const AGENTS_FILE = path.join(__dirname, 'agentsRegistry.json');
 
-// Initialize Gemini
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const model = 'gemini-2.5-flash';
 
-// Cache for knowledge bundle content
 const knowledgeCache = new Map();
 
 class Orchestrator {
@@ -68,7 +65,7 @@ class Orchestrator {
     if (!agent.knowledgeBundles) agent.knowledgeBundles = [];
     
     agent.knowledgeBundles.push({ name: fileName, type: 'file', path: filePath });
-    knowledgeCache.set(filePath, content); // Cache the content
+    knowledgeCache.set(filePath, content);
     
     this.saveAgents();
     this.broadcast('agent-update', agent);
@@ -204,7 +201,8 @@ class Orchestrator {
         let output;
         
         if (agent.primarySpecialty === 'art') {
-            output = { type: 'image', content: await generateImage(task.prompt) };
+             const result = await ai.models.generateContent({ model: agent.currentEngine || model, contents: executionPrompt });
+             output = { type: 'text', content: `Image generation is a premium feature. Simulating output for: "${task.prompt}"\n\n${result.text}` };
         } else {
             const executionResult = await ai.models.generateContent({ model: agent.currentEngine || model, contents: executionPrompt });
             output = { type: 'text', content: executionResult.text };

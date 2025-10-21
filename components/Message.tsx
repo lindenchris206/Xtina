@@ -1,6 +1,6 @@
 import React from 'react';
-import { ChatMessage } from '../types';
-import { UserIcon, AiIcon, LoadingIcon, SpeakIcon } from './icons';
+import { ChatMessage, CouncilMessage } from '../types';
+import { UserIcon, AiIcon, LoadingIcon, SpeakIcon, AgentIcon } from './icons';
 
 interface MessageProps {
   message: ChatMessage;
@@ -20,8 +20,21 @@ const ImageDisplay: React.FC<{ url: string }> = ({ url }) => (
     </div>
 );
 
+const CouncilView: React.FC<{ messages: CouncilMessage[] }> = ({ messages }) => (
+    <div className="mt-3 border-t border-white/10 pt-3 space-y-3">
+        <h4 className="text-xs font-bold font-orbitron text-[rgb(var(--color-accent))]">COUNCIL DELIBERATION</h4>
+        {messages.map((msg, idx) => (
+            <div key={idx} className="bg-black/20 p-2 rounded-md">
+                <p className="text-xs font-semibold text-[rgb(var(--color-primary))] flex items-center gap-1.5"><AgentIcon/>{msg.agentName}</p>
+                <p className="text-xs text-[rgb(var(--color-text-muted))] mt-1 whitespace-pre-wrap">{msg.response}</p>
+            </div>
+        ))}
+    </div>
+);
+
 export const Message: React.FC<MessageProps> = ({ message, isStreaming = false, onSpeak }) => {
   const isUser = message.role === 'user';
+  const isSystem = message.role === 'system';
 
   const renderText = (text: string) => {
     const parts = text.split(/(```[\s\S]*?```)/g);
@@ -34,6 +47,14 @@ export const Message: React.FC<MessageProps> = ({ message, isStreaming = false, 
     });
   };
 
+  if (isSystem) {
+    return (
+      <div className="text-center text-xs text-[rgb(var(--color-text-muted))] italic py-2">
+        {message.text}
+      </div>
+    );
+  }
+
   return (
     <div className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
       {!isUser && <div className="flex-shrink-0 w-8 h-8 bg-[rgb(var(--color-primary))] rounded-full flex items-center justify-center text-black"><AiIcon /></div>}
@@ -43,6 +64,7 @@ export const Message: React.FC<MessageProps> = ({ message, isStreaming = false, 
             {renderText(message.text)}
             {message.imageUrl && <ImageDisplay url={message.imageUrl} />}
             {isStreaming && <LoadingIcon className="inline-block ml-2 animate-spin"/>}
+            {message.councilMessages && <CouncilView messages={message.councilMessages} />}
         </div>
 
         <div className="flex justify-end items-center mt-2">

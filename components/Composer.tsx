@@ -39,7 +39,7 @@ export const Composer: React.FC<ComposerProps> = ({ onSend, onInterrupt, streami
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Chat with Renee, or use /crew [your command] for the team..."
+        placeholder="Chat with Renee, or use /crew [prompt] or /council [prompt]..."
         className="flex-1 min-h-[44px] max-h-40 resize-none p-2 rounded-md bg-transparent border border-white/10 text-[rgb(var(--color-text))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-primary))] transition-shadow font-mono"
         rows={1}
       />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Agent } from '../types';
-import { ConversationIcon, AgentIcon, NewChatIcon, DeleteIcon, LogIcon } from './icons';
+import { ConversationIcon, AgentIcon, NewChatIcon, DeleteIcon, LogIcon, EditIcon } from './icons';
 
 interface LeftSidebarProps {
     conversations: { id: string, title: string }[];
@@ -11,6 +11,7 @@ interface LeftSidebarProps {
     agents: Agent[];
     logs: string[];
     onEngineChange: (agentName: string, newEngine: string) => void;
+    onEditAgent: (agent: Agent) => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
@@ -21,7 +22,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     onDeleteChat,
     agents,
     logs,
-    onEngineChange
+    onEngineChange,
+    onEditAgent
 }) => {
   return (
     <div className="h-full flex flex-col gap-4 text-sm">
@@ -67,7 +69,10 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         <ul className="space-y-3 overflow-y-auto scrollbar-thin pr-1">
           {agents.map(agent => (
             <li key={agent.name} className="p-2 bg-black/20 rounded-md border border-white/5">
-              <p className="font-medium text-[rgb(var(--color-text))] text-xs">{agent.name}</p>
+              <div className="flex justify-between items-center">
+                <p className="font-medium text-[rgb(var(--color-text))] text-xs">{agent.name}</p>
+                <button onClick={() => onEditAgent(agent)} className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-primary))]"><EditIcon /></button>
+              </div>
               <p className="text-[10px] text-[rgb(var(--color-text-muted))] mt-0.5 truncate" title={agent.description}>
                 {agent.description}
               </p>

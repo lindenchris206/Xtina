@@ -7,7 +7,6 @@ import { Composer } from './components/Composer';
 import { useChat } from './hooks/useChat';
 import { Agent, Task, CouncilMessage } from './types';
 import io from 'socket.io-client';
-import { AnimatedBackground } from './components/AnimatedBackground';
 import { CommandPalette } from './components/CommandPalette';
 import { AgentEditorModal } from './components/AgentEditorModal';
 
@@ -206,14 +205,13 @@ const App: React.FC = () => {
 
   return (
     <>
-      <AnimatedBackground />
       {isPaletteOpen && <CommandPalette onCommand={handleCommand} onClose={() => setIsPaletteOpen(false)} />}
       {editingAgent && <AgentEditorModal agent={editingAgent} onSave={handleAgentUpdate} onClose={() => setEditingAgent(null)} />}
       
-      <div className="app grid grid-cols-[220px_1fr_280px] grid-rows-[64px_1fr_auto] gap-3 h-screen p-3 md:grid-cols-[220px_1fr] sm:grid-cols-1 sm:grid-rows-[64px_auto_1fr_auto]">
+      <div className="app grid grid-cols-[260px_1fr_320px] grid-rows-[60px_1fr_auto] gap-4 h-screen p-4 bg-background text-text-main">
         <Header />
         
-        <aside className="left glassmorphism rounded-lg p-3 overflow-y-auto scrollbar-thin hidden sm:hidden md:block">
+        <aside className="left glassmorphism rounded-xl p-3 overflow-y-auto scrollbar-thin hidden sm:hidden md:block">
           <LeftSidebar 
               conversations={conversationsSummary}
               activeId={activeConversationId}
@@ -227,7 +225,7 @@ const App: React.FC = () => {
           />
         </aside>
 
-        <main className="main glassmorphism rounded-lg p-3 flex flex-col min-w-0">
+        <main className="main glassmorphism rounded-xl p-1 flex flex-col min-w-0">
           <ChatWindow 
             messages={messages} 
             currentAiMessage={currentAiMessage} 
@@ -237,7 +235,7 @@ const App: React.FC = () => {
           />
         </main>
         
-        <aside className="right glassmorphism rounded-lg p-3 overflow-y-auto scrollbar-thin hidden lg:block">
+        <aside className="right glassmorphism rounded-xl p-3 overflow-y-auto scrollbar-thin hidden lg:block">
           <RightSidebar agents={agents} tasks={tasks} onAgentsUpdate={setAgents} />
         </aside>
 

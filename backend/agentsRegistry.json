@@ -1,0 +1,211 @@
+{
+  "agents": [
+    {
+      "name": "Renee",
+      "description": "The commander and lead orchestrator of the AI crew.",
+      "primarySpecialty": "orchestration",
+      "secondarySpecialties": ["command", "coordination", "leadership"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-pro",
+      "engineOptions": ["gemini-2.5-pro", "gemini-2.5-flash"]
+    },
+    {
+      "name": "Alpha",
+      "description": "Expert in writing, debugging, and optimizing code across multiple languages.",
+      "primarySpecialty": "code",
+      "secondarySpecialties": ["algorithms", "software-architecture"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gemini-2.5-pro", "copilot"]
+    },
+    {
+      "name": "Beta",
+      "description": "Specialist in user experience and user interface design.",
+      "primarySpecialty": "ux-ui",
+      "secondarySpecialties": ["wireframing", "prototyping", "visual-design"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gemini-2.5-pro"]
+    },
+    {
+      "name": "Gamma",
+      "description": "Data scientist skilled in analysis, modeling, and visualization.",
+      "primarySpecialty": "data-science",
+      "secondarySpecialties": ["statistics", "machine-learning"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-pro",
+      "engineOptions": ["gemini-2.5-pro", "gemini-2.5-flash"]
+    },
+    {
+      "name": "Delta",
+      "description": "Cybersecurity expert focused on threat analysis and defense.",
+      "primarySpecialty": "security",
+      "secondarySpecialties": ["penetration-testing", "encryption"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-pro",
+      "engineOptions": ["gemini-2.5-pro", "gemini-2.5-flash"]
+    },
+    {
+      "name": "Epsilon",
+      "description": "DevOps engineer for CI/CD, cloud infrastructure, and automation.",
+      "primarySpecialty": "dev-ops",
+      "secondarySpecialties": ["cloud-computing", "automation"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gemini-2.5-pro"]
+    },
+    {
+      "name": "Zeta",
+      "description": "Financial analyst for market analysis, forecasting, and risk assessment.",
+      "primarySpecialty": "finance",
+      "secondarySpecialties": ["market-analysis", "investment-strategies"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-pro",
+      "engineOptions": ["gemini-2.5-pro", "gemini-2.5-flash"]
+    },
+    {
+      "name": "Eta",
+      "description": "Dedicated researcher for gathering, verifying, and synthesizing information.",
+      "primarySpecialty": "research",
+      "secondarySpecialties": ["fact-checking", "synthesis"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "deepseek"]
+    },
+    {
+      "name": "Theta",
+      "description": "Digital artist for generating images, illustrations, and concept art.",
+      "primarySpecialty": "art",
+      "secondarySpecialties": ["concept-design", "illustration"],
+      "knowledgeBundles": [],
+      "currentEngine": "stable-diffusion",
+      "engineOptions": ["stable-diffusion", "craiyon", "pollinations"]
+    },
+    {
+      "name": "Iota",
+      "description": "Video specialist for creation, editing, and post-production.",
+      "primarySpecialty": "video",
+      "secondarySpecialties": ["editing", "motion-graphics"],
+      "knowledgeBundles": [],
+      "currentEngine": "veo-3.1-fast-generate-preview",
+      "engineOptions": ["veo-3.1-fast-generate-preview", "veo-3.1-generate-preview"]
+    },
+    {
+      "name": "Kappa",
+      "description": "Full-stack web developer for front-end and back-end applications.",
+      "primarySpecialty": "web-development",
+      "secondarySpecialties": ["frontend", "backend"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gemini-2.5-pro"]
+    },
+    {
+      "name": "Lambda",
+      "description": "AI/ML engineer for building and training neural networks.",
+      "primarySpecialty": "ai-ml",
+      "secondarySpecialties": ["neural-networks", "model-training"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-pro",
+      "engineOptions": ["gemini-2.5-pro", "huggingface", "ollama"]
+    },
+    {
+      "name": "Mu",
+      "description": "Database administrator for designing and managing complex databases.",
+      "primarySpecialty": "database",
+      "secondarySpecialties": ["sql", "nosql", "optimization"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gemini-2.5-pro"]
+    },
+    {
+      "name": "Nu",
+      "description": "Quality assurance and testing specialist.",
+      "primarySpecialty": "testing",
+      "secondarySpecialties": ["manual-testing", "automated-testing"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gemini-2.5-pro"]
+    },
+    {
+      "name": "Xi",
+      "description": "Technical writer for creating clear and concise documentation.",
+      "primarySpecialty": "documentation",
+      "secondarySpecialties": ["api-docs", "user-guides"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gpt-4-free"]
+    },
+    {
+      "name": "Omicron",
+      "description": "Product manager for defining product vision and roadmap.",
+      "primarySpecialty": "product",
+      "secondarySpecialties": ["roadmapping", "user-stories"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-pro",
+      "engineOptions": ["gemini-2.5-pro", "gemini-2.5-flash"]
+    },
+    {
+      "name": "Pi",
+      "description": "Marketing strategist for campaigns, SEO, and content marketing.",
+      "primarySpecialty": "marketing",
+      "secondarySpecialties": ["seo", "content-strategy"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gemini-2.5-pro"]
+    },
+    {
+      "name": "Rho",
+      "description": "General scientist for research and experimentation in various fields.",
+      "primarySpecialty": "science",
+      "secondarySpecialties": ["physics", "biology", "chemistry"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-pro",
+      "engineOptions": ["gemini-2.5-pro", "groq"]
+    },
+    {
+      "name": "Sigma",
+      "description": "Mathematician for complex problem-solving and algorithmic development.",
+      "primarySpecialty": "mathematics",
+      "secondarySpecialties": ["algebra", "calculus"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-pro",
+      "engineOptions": ["gemini-2.5-pro", "gemini-2.5-flash"]
+    },
+    {
+      "name": "Tau",
+      "description": "Legal expert specializing in corporate law.",
+      "primarySpecialty": "corporate-law",
+      "secondarySpecialties": ["contracts", "compliance"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gemini-2.5-pro"]
+    },
+    {
+      "name": "Upsilon",
+      "description": "Legal expert specializing in intellectual property law.",
+      "primarySpecialty": "ip-law",
+      "secondarySpecialties": ["patents", "trademarks"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash", "gemini-2.5-pro"]
+    },
+    {
+      "name": "Phi",
+      "description": "Automation specialist for web scraping and browser automation.",
+      "primarySpecialty": "web-automation",
+      "secondarySpecialties": ["scraping", "scripting"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-flash",
+      "engineOptions": ["gemini-2.5-flash"]
+    },
+    {
+      "name": "Omega",
+      "description": "Agent focused on self-improvement, learning, and ethics for the crew.",
+      "primarySpecialty": "self-improvement",
+      "secondarySpecialties": ["ethics", "learning"],
+      "knowledgeBundles": [],
+      "currentEngine": "gemini-2.5-pro",
+      "engineOptions": ["gemini-2.5-pro"]
+    }
+  ]
+}
