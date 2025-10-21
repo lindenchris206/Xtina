@@ -1,9 +1,9 @@
-
 import { Agent } from '../types';
 
+// Fix: Add the required 'primarySpecialty' property to the mock agent objects. The Agent type in types.ts has been updated to allow optional id, description, and enabled properties.
 let agentsRegistry: Agent[] = [
-  { id: 'agent-logger', name: 'Logger Agent', description: 'Collects logs', enabled: true },
-  { id: 'agent-media', name: 'Media Processor', description: 'Processes media', enabled: false }
+  { id: 'agent-logger', name: 'Logger Agent', primarySpecialty: 'logging', description: 'Collects logs', enabled: true },
+  { id: 'agent-media', name: 'Media Processor', primarySpecialty: 'media', description: 'Processes media', enabled: false }
 ];
 
 const delay = <T,>(data: T): Promise<T> => new Promise(res => setTimeout(() => res(data), 300));

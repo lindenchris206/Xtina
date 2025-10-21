@@ -1,26 +1,33 @@
+
 {
   "agents": [
     {
-      "name": "AI_1",
-      "specialties": ["text", "code"],
-      "secondarySpecialties": ["image"],
+      "name": "AI_Alpha",
+      "primarySpecialty": "text",
+      "secondarySpecialties": ["prompt-engineering", "code"],
       "knowledgeBundles": ["general", "programming"],
+      "currentEngine": "Gemini",
+      "engineOptions": ["Gemini", "GPT-4", "Copilot", "Ollama", "LocalAI"],
       "selfImprove": true,
       "help": ["How to write code", "Using AI agents"]
     },
     {
-      "name": "AI_2",
-      "specialties": ["image", "video"],
-      "secondarySpecialties": ["text"],
-      "knowledgeBundles": ["media", "design"],
+      "name": "AI_Beta",
+      "primarySpecialty": "image",
+      "secondarySpecialties": ["video", "design"],
+      "knowledgeBundles": ["media", "design-guides"],
+      "currentEngine": "StableDiffusion",
+      "engineOptions": ["StableDiffusion", "DALL-E", "MidJourney", "Runway"],
       "selfImprove": false,
       "help": ["Creating images", "Video editing tips"]
     },
     {
-      "name": "AI_3",
-      "specialties": ["sound", "text"],
-      "secondarySpecialties": ["video"],
-      "knowledgeBundles": ["audio", "music"],
+      "name": "AI_Gamma",
+      "primarySpecialty": "audio",
+      "secondarySpecialties": ["text", "transcription"],
+      "knowledgeBundles": ["audio", "speech"],
+      "currentEngine": "ElevenLabs",
+      "engineOptions": ["ElevenLabs", "Bark", "OpenAI-Audio", "LocalAudio"],
       "selfImprove": false,
       "help": ["Audio mixing", "Text-to-speech"]
     }

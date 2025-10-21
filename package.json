@@ -3,5 +3,16 @@
   "name": "xtina-2.0",
   "version": "2.0.0",
   "private": true,
-  "description": "A modern, responsive AI chat application built with React and powered by the Gemini API."
+  "description": "A modern, responsive AI chat application built with React and powered by the Gemini API.",
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "express-fileupload": "^1.5.0",
+    "cors": "^2.8.5",
+    "archiver": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0"
+  }
 }
