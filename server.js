@@ -1,13 +1,18 @@
+import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
+import fileUpload from 'express-fileupload';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import fetch from 'node-fetch';
 
-// backend/server.js
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const fileUpload = require('express-fileupload');
-const cors = require('cors');
-const path = require('path');
-const orchestrator = require('./orchestrator');
-const fileConverter = require('./fileConverter');
+import orchestrator from './orchestrator.js';
+import fileConverter from './fileConverter.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
@@ -17,14 +22,15 @@ app.use(cors());
 app.use(express.json());
 app.use(fileUpload());
 
-// Create uploads directory if it doesn't exist
+// Serve Vite's static assets in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'dist')));
+}
+
 const uploadsDir = path.join(__dirname, 'uploads');
-const fs = require('fs');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
-
-// Static folders
 app.use('/uploads', express.static(uploadsDir));
 
 // API endpoints
@@ -33,24 +39,20 @@ app.get('/api/agents', (req, res) => {
 });
 
 app.post('/api/agents/:name/engine', (req, res) => {
-  const name = req.params.name;
-  const engine = req.body.engine;
+  const { name } = req.params;
+  const { engine } = req.body;
   const agent = orchestrator.updateAgentEngine(name, engine);
   if (!agent) return res.status(404).json({ error: 'Agent not found' });
   res.json(agent);
 });
 
-// Tasks
+// Task creation from user prompt
 app.post('/api/tasks', (req, res) => {
-  const task = req.body;
-  orchestrator.addTask(task);
-  res.json({ status: 'queued', task });
-});
-
-app.get('/api/tasks/:id/output', (req, res) => {
-  const out = orchestrator.getTaskOutput(req.params.id);
-  if (!out) return res.status(404).json({ error: 'Not found' });
-  res.json({ output: out });
+  const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
+  
+  orchestrator.createTaskFromPrompt(prompt);
+  res.status(202).json({ message: 'Task received' });
 });
 
 // File upload
@@ -59,8 +61,47 @@ app.post('/api/file/upload', async (req, res) => {
     const result = await fileConverter.handleUpload(req);
     res.json(result);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'upload failed', details: String(err) });
+  }
+});
+
+// ElevenLabs TTS endpoint
+app.post('/api/speak', async (req, res) => {
+  const { text } = req.body;
+  const voiceId = process.env.ELEVENLABS_VOICE_ID || 'EXAVITQu4vr4xnSDxMaL'; // Default to Rachel
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'ElevenLabs API key is not configured on the server.' });
+  }
+
+  try {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: 'eleven_monolingual_v1',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`ElevenLabs API responded with status ${response.status}`);
+    }
+
+    res.setHeader('Content-Type', 'audio/mpeg');
+    response.body.pipe(res);
+
+  } catch (error) {
+    console.error('ElevenLabs error:', error);
+    res.status(500).json({ error: 'Failed to generate speech.' });
   }
 });
 
@@ -75,5 +116,5 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = 3001;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => console.log(`AI Crew Commander backend running on port ${PORT}`));

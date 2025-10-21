@@ -1,20 +1,26 @@
-
 import React from 'react';
 import { ChatMessage } from '../types';
-import { UserIcon, AiIcon, LoadingIcon } from './icons';
+import { UserIcon, AiIcon, LoadingIcon, SpeakIcon } from './icons';
 
 interface MessageProps {
   message: ChatMessage;
   isStreaming?: boolean;
+  onSpeak: (text: string) => void;
 }
 
 const CodeBlock: React.FC<{ content: string }> = ({ content }) => (
-    <pre className="bg-black/30 p-3 rounded-md font-mono text-sm text-blue-200 overflow-x-auto my-2">
+    <pre className="bg-black/30 p-3 rounded-md font-mono text-sm text-cyan-200 overflow-x-auto my-2">
         <code>{content}</code>
     </pre>
 );
 
-export const Message: React.FC<MessageProps> = ({ message, isStreaming = false }) => {
+const ImageDisplay: React.FC<{ url: string }> = ({ url }) => (
+    <div className="mt-2 border border-white/10 rounded-lg overflow-hidden">
+        <img src={url} alt="Generated content" className="max-w-full h-auto" />
+    </div>
+);
+
+export const Message: React.FC<MessageProps> = ({ message, isStreaming = false, onSpeak }) => {
   const isUser = message.role === 'user';
 
   const renderText = (text: string) => {
@@ -30,19 +36,28 @@ export const Message: React.FC<MessageProps> = ({ message, isStreaming = false }
 
   return (
     <div className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
-      {!isUser && <div className="flex-shrink-0 w-8 h-8 bg-brand-accent rounded-full flex items-center justify-center text-white"><AiIcon /></div>}
+      {!isUser && <div className="flex-shrink-0 w-8 h-8 bg-[rgb(var(--color-primary))] rounded-full flex items-center justify-center text-black"><AiIcon /></div>}
       
-      <div className={`max-w-[76%] p-3 rounded-xl shadow-lg relative text-sm font-mono ${isUser ? 'ml-auto bg-gradient-to-r from-[rgba(255,255,255,0.02)] to-[rgba(255,255,255,0.01)] border border-white/10' : 'bg-gradient-to-r from-brand-accent-glow to-[rgba(124,92,255,0.02)] border-l-4 border-brand-accent'}`}>
-        <div className="whitespace-pre-wrap leading-relaxed">
+      <div className={`group max-w-[76%] p-3 rounded-xl shadow-lg relative font-mono text-sm ${isUser ? 'ml-auto bg-gradient-to-r from-[rgba(255,255,255,0.02)] to-[rgba(255,255,255,0.01)] border border-white/10' : 'bg-gradient-to-r from-[rgba(var(--color-secondary),0.1)] to-[rgba(var(--color-secondary),0.02)] border-l-4 border-[rgb(var(--color-secondary))]'}`}>
+        <div className="whitespace-pre-wrap leading-relaxed text-[rgb(var(--color-text))]">
             {renderText(message.text)}
+            {message.imageUrl && <ImageDisplay url={message.imageUrl} />}
             {isStreaming && <LoadingIcon className="inline-block ml-2 animate-spin"/>}
         </div>
-        <div className="text-xs text-brand-muted/70 mt-2 text-right">
-          {new Date(message.ts).toLocaleTimeString()}
+
+        <div className="flex justify-end items-center mt-2">
+           {!isUser && !isStreaming && message.text && (
+             <button onClick={() => onSpeak(message.text)} className="p-1 rounded-md text-[rgb(var(--color-text-muted))] opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-opacity" aria-label="Speak message">
+                <SpeakIcon />
+             </button>
+           )}
+          <div className="text-xs text-[rgb(var(--color-text-muted))] ml-auto">
+            {new Date(message.ts).toLocaleTimeString()}
+          </div>
         </div>
       </div>
 
-      {isUser && <div className="flex-shrink-0 w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-brand-text"><UserIcon/></div>}
+      {isUser && <div className="flex-shrink-0 w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-[rgb(var(--color-text))]"><UserIcon/></div>}
     </div>
   );
 };

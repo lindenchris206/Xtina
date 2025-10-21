@@ -1,53 +1,106 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="commander">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%234EC5FF' d='M50 0L93.3 25v50L50 100l-43.3-25v-50L50 0z'/%3E%3Cpath fill='%23fff' d='M50 15L78.3 30v40L50 85 21.7 70v-40L50 15z'/%3E%3Cpath fill='%230f1724' d='M50 22L71.65 33.5v23L50 68l-21.65-11.5v-23L50 22z'/%3E%3C/svg%3E" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Xtina 2.0 - AI Chat Interface</title>
+    <title>AI Crew Commander Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto+Mono&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
-              mono: ['Roboto Mono', 'monospace'],
-            },
-            colors: {
-              'brand-bg': '#0f1724',
-              'brand-panel': '#0b1220',
-              'brand-gradient-from': '#061123',
-              'brand-gradient-to': '#071528',
-              'brand-accent': '#7c5cff',
-              'brand-accent-glow': 'rgba(124, 92, 255, 0.08)',
-              'brand-muted': '#9aa7b2',
-              'brand-text': '#e6eef3',
-            },
-          },
-        },
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+      @tailwind base;
+      @tailwind components;
+      @tailwind utilities;
+      
+      :root, [data-theme="commander"] {
+        --color-primary: 78 197 255; /* #4EC5FF */
+        --color-secondary: 174 113 255; /* #AE71FF */
+        --color-accent: 255 107 157; /* #FF6B9D */
+        --color-bg-main: 15 23 36; /* #0f1724 */
+        --color-bg-panel: 11 18 32; /* #0b1220 */
+        --color-text: 226 232 240; /* #e2e8f0 */
+        --color-text-muted: 148 163 184; /* #94a3b8 */
+        --font-display: 'Orbitron', sans-serif;
+        --font-mono: 'Source Code Pro', monospace;
+        --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       }
-    </script>
+
+      body {
+        font-family: var(--font-sans);
+        background-color: rgb(var(--color-bg-main));
+        color: rgb(var(--color-text));
+        overflow: hidden;
+      }
+
+      #background-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.3;
+      }
+
+      #root {
+        position: relative;
+        z-index: 1;
+        height: 100vh;
+        width: 100vw;
+      }
+      .font-orbitron { font-family: var(--font-display); }
+      .font-mono { font-family: var(--font-mono); }
+      .glassmorphism {
+        background: rgba(var(--color-bg-panel), 0.5);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+      .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: rgba(var(--color-secondary), 0.5);
+        border-radius: 20px;
+      }
+
+      model-viewer {
+        width: 100%;
+        height: 100%;
+        --progress-mask: transparent;
+      }
+    </style>
+    <!-- Loads <model-viewer> for 3D model rendering -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <script type="importmap">
 {
   "imports": {
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "socket.io-client": "https://aistudiocdn.com/socket.io-client@^4.8.1",
     "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0",
     "process": "https://aistudiocdn.com/process@^0.11.10",
     "fs": "https://aistudiocdn.com/fs@^0.0.1-security",
     "path": "https://aistudiocdn.com/path@^0.12.7",
-    "archiver": "https://aistudiocdn.com/archiver@^7.0.1",
-    "socket.io-client": "https://aistudiocdn.com/socket.io-client@^4.8.1"
+    "url": "https://aistudiocdn.com/url@^0.11.4",
+    "express": "https://aistudiocdn.com/express@^5.1.0",
+    "http": "https://aistudiocdn.com/http@^0.0.1-security",
+    "socket.io": "https://aistudiocdn.com/socket.io@^4.8.1",
+    "express-fileupload": "https://aistudiocdn.com/express-fileupload@^1.5.2",
+    "cors": "https://aistudiocdn.com/cors@^2.8.5",
+    "node-fetch": "https://aistudiocdn.com/node-fetch@^3.3.2",
+    "archiver": "https://aistudiocdn.com/archiver@^7.0.1"
   }
 }
 </script>
 </head>
   <body class="bg-brand-gradient-from bg-gradient-to-b from-brand-gradient-from to-brand-gradient-to text-brand-text font-sans">
+    <canvas id="background-canvas"></canvas>
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Chat } from "@google/genai";
 
 class GeminiService {
@@ -13,7 +12,7 @@ class GeminiService {
     this.chat = this.ai.chats.create({
         model: 'gemini-2.5-flash',
         config: {
-            systemInstruction: 'You are a helpful and creative AI assistant named Xtina.',
+            systemInstruction: 'You are a helpful and creative AI assistant named Renee, lead orchestrator of an AI crew.',
         }
     });
   }

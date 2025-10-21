@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { LeftSidebar } from './components/LeftSidebar';
 import { ChatWindow } from './components/ChatWindow';
@@ -7,9 +7,7 @@ import { Composer } from './components/Composer';
 import { useChat } from './hooks/useChat';
 import { Agent, Task } from './types';
 import io from 'socket.io-client';
-
-// API calls are now relative, removing the dependency on a hardcoded 'localhost:3001'.
-// This fixes "Failed to fetch" errors in deployed or proxied environments.
+import { AnimatedBackground } from './components/AnimatedBackground';
 
 const App: React.FC = () => {
   const {
@@ -23,26 +21,94 @@ const App: React.FC = () => {
     startNewConversation,
     switchConversation,
     deleteConversation,
+    addMessage,
   } = useChat();
 
   const [agents, setAgents] = useState<Agent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [logs, setLogs] = useState<string[]>([]);
-  
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  const handleTaskRequest = async (prompt: string) => {
+    try {
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      // Task updates will come via WebSocket
+    } catch (error) {
+      console.error('Failed to create task:', error);
+      addMessage({
+        id: `err_${Date.now()}`,
+        role: 'ai',
+        text: `Error: Could not start task. ${error instanceof Error ? error.message : ''}`,
+        ts: new Date().toISOString()
+      });
+    }
+  };
+
+  const handleSendMessage = (text: string) => {
+    // If message starts with /crew, it's a task for the backend orchestrator.
+    // Otherwise, it's a direct chat with the lead AI (Renee) via the frontend service.
+    if (text.toLowerCase().startsWith('/crew ')) {
+      const prompt = text.substring(6);
+      handleTaskRequest(prompt);
+      // Also add a message to the UI to show the command was issued.
+      addMessage({
+        id: `cmd_${Date.now()}`,
+        role: 'user',
+        text: `Command issued to crew: ${prompt}`,
+        ts: new Date().toISOString()
+      });
+    } else {
+      sendMessage(text); // This is the useChat hook's sendMessage
+    }
+  };
+
+  const playAudio = async (text: string) => {
+    if (isSpeaking) return;
+    if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    const audioContext = audioContextRef.current;
+    
+    setIsSpeaking(true);
+    try {
+        const response = await fetch('/api/speak', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+        if (!response.ok) throw new Error('Failed to fetch audio from server.');
+
+        const audioData = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(audioData);
+
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+
+        source.onended = () => {
+            setIsSpeaking(false);
+        };
+    } catch (error) {
+        console.error("Audio playback error:", error);
+        setIsSpeaking(false);
+    }
+  };
+
   useEffect(() => {
-    // Initial data fetch from relative path
     fetch('/api/agents')
       .then(res => res.json())
       .then(data => setAgents(data.agents || []))
       .catch(err => console.error("Failed to fetch agents:", err));
       
-    // Setup socket connection to the same host that serves the page
     const socket = io();
 
-    socket.on('connect', () => {
-      console.log('Connected to backend orchestrator.');
-    });
-
+    socket.on('connect', () => console.log('Connected to backend orchestrator.'));
     socket.on('agents', (allAgents: Agent[]) => setAgents(allAgents));
     socket.on('tasks', (allTasks: Task[]) => setTasks(allTasks));
 
@@ -53,77 +119,79 @@ const App: React.FC = () => {
     socket.on('task-update', (updatedTask: Task) => {
       setTasks(prev => {
         const existing = prev.find(t => t.id === updatedTask.id);
-        if (existing) {
-          return prev.map(t => t.id === updatedTask.id ? updatedTask : t);
-        }
+        if (existing) return prev.map(t => t.id === updatedTask.id ? updatedTask : t);
         return [...prev, updatedTask];
       });
+      if (updatedTask.status === 'done' && updatedTask.output) {
+        addMessage({
+          id: `task_${updatedTask.id}`,
+          role: 'ai',
+          text: `Task complete: ${updatedTask.title}\n\n${updatedTask.output.type === 'text' ? updatedTask.output.content : ''}`.trim(),
+          imageUrl: updatedTask.output.type === 'image' ? updatedTask.output.content : undefined,
+          ts: new Date().toISOString()
+        });
+      }
     });
 
     socket.on('log', (log: { message: string, time: string }) => {
-      setLogs(prev => [`${new Date(log.time).toLocaleTimeString()} - ${log.message}`, ...prev]);
+      setLogs(prev => [`${new Date(log.time).toLocaleTimeString()} - ${log.message}`, ...prev].slice(0, 100));
     });
 
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [addMessage]);
 
-  const handleExport = () => {
-    const text = messages.map(m =>
-      `${m.role === 'user' ? 'You' : 'AI'}: ${m.text}\n[${new Date(m.ts).toLocaleString()}]\n\n`
-    ).join('');
-    const blob = new Blob([text], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'xtina-chat.txt';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
-  
   const handleEngineChange = async (agentName: string, newEngine: string) => {
     try {
-      // API call to relative path
       await fetch(`/api/agents/${agentName}/engine`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ engine: newEngine })
       });
-      // The websocket 'agent-update' will handle the state change
     } catch (error) {
       console.error('Failed to update agent engine', error);
     }
   };
 
   return (
-    <div className="app grid grid-cols-[260px_1fr_320px] grid-rows-[64px_1fr_auto] gap-3 h-screen p-3 font-sans lg:grid-cols-[260px_1fr_320px] md:grid-cols-[260px_1fr] sm:grid-cols-1 sm:grid-rows-[64px_1fr_auto]">
-      <Header onExport={handleExport} />
-      
-      <aside className="left bg-brand-panel rounded-lg p-3 overflow-y-auto hidden sm:hidden md:block">
-        <LeftSidebar 
-            conversations={conversationsSummary}
-            activeId={activeConversationId}
-            onNewChat={startNewConversation}
-            onSwitchChat={switchConversation}
-            onDeleteChat={deleteConversation}
-            agents={agents}
-            logs={logs}
-            onEngineChange={handleEngineChange}
-        />
-      </aside>
+    <>
+      <AnimatedBackground />
+      <div className="app grid grid-cols-[260px_1fr_320px] grid-rows-[64px_1fr_auto] gap-3 h-screen p-3 lg:grid-cols-[260px_1fr_320px] md:grid-cols-[260px_1fr] sm:grid-cols-1 sm:grid-rows-[64px_auto_1fr_auto]">
+        <Header />
+        
+        <aside className="left glassmorphism rounded-lg p-3 overflow-y-auto scrollbar-thin hidden sm:hidden md:block">
+          <LeftSidebar 
+              conversations={conversationsSummary}
+              activeId={activeConversationId}
+              onNewChat={startNewConversation}
+              onSwitchChat={switchConversation}
+              onDeleteChat={deleteConversation}
+              agents={agents}
+              logs={logs}
+              onEngineChange={handleEngineChange}
+          />
+        </aside>
 
-      <main className="main bg-gradient-to-b from-[rgba(255,255,255,0.02)] to-[rgba(255,255,255,0.01)] rounded-lg p-3 flex flex-col min-w-0">
-        <ChatWindow messages={messages} currentAiMessage={currentAiMessage} tasks={tasks} />
-      </main>
-      
-      <aside className="right bg-brand-panel rounded-lg p-3 overflow-y-auto hidden lg:block">
-        <RightSidebar tasks={tasks} />
-      </aside>
+        <main className="main glassmorphism rounded-lg p-3 flex flex-col min-w-0">
+          <ChatWindow 
+            messages={messages} 
+            currentAiMessage={currentAiMessage} 
+            tasks={tasks} 
+            isSpeaking={isSpeaking}
+            onSpeak={playAudio}
+          />
+        </main>
+        
+        <aside className="right glassmorphism rounded-lg p-3 overflow-y-auto scrollbar-thin hidden lg:block">
+          <RightSidebar tasks={tasks} />
+        </aside>
 
-      <footer className="grid-column:1/-1 col-span-full">
-        <Composer onSend={sendMessage} onInterrupt={interrupt} streaming={streaming} />
-      </footer>
-    </div>
+        <footer className="col-span-full">
+          <Composer onSend={handleSendMessage} onInterrupt={interrupt} streaming={streaming} />
+        </footer>
+      </div>
+    </>
   );
 };
 

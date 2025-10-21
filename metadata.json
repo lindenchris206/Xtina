@@ -1,5 +1,7 @@
 {
-  "name": "Xtina 2.0 - AI Chat Interface",
-  "description": "A modern, responsive AI chat application built with React and powered by the Gemini API. It features real-time streaming responses, conversation history, and a sleek, developer-focused user interface.",
-  "requestFramePermissions": []
+  "name": "AI Crew Commander Suite",
+  "description": "An advanced AI-powered crew of 22 specialists to assist with any project. Led by Commander Astra, the crew collaborates to analyze tasks, generate code, create files, and provide comprehensive solutions.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

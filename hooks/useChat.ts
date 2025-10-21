@@ -1,22 +1,21 @@
-
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { ChatMessage, Conversation } from '../types';
 import { geminiService } from '../services/geminiService';
 
 const uid = () => Math.random().toString(36).slice(2, 9);
-const STORAGE_KEY = 'xtina-conversations';
+const STORAGE_KEY = 'aicrew-conversations';
 
 const createNewConversation = (messages: ChatMessage[] = []): Conversation => {
   const defaultMessage: ChatMessage = {
     id: uid(),
     role: 'ai',
-    text: 'Hello — I am Xtina 2.0, a demo using the Gemini API. Type a message to get started.',
+    text: 'Awaiting command, Commander. I am Renee, your lead AI orchestrator.',
     ts: new Date().toISOString(),
   };
 
   return {
     id: uid(),
-    title: 'New Conversation',
+    title: 'New Mission',
     messages: messages.length > 0 ? messages : [defaultMessage],
   };
 };
@@ -62,29 +61,36 @@ export const useChat = () => {
       return conversations.find(c => c.id === activeId);
   }, [conversations, activeId]);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const addMessage = useCallback((message: ChatMessage) => {
     if (!activeId) return;
+    setState(prevState => ({
+      ...prevState,
+      conversations: prevState.conversations.map(c => 
+        c.id === activeId 
+        ? { ...c, messages: [...c.messages, message] }
+        : c
+      )
+    }));
+  }, [activeId]);
 
+  const sendMessage = useCallback(async (text: string) => {
     const userMessage: ChatMessage = {
       id: uid(),
       role: 'user',
       text,
       ts: new Date().toISOString(),
     };
+    addMessage(userMessage);
 
     const isFirstUserMessage = activeConversation?.messages.filter(m => m.role === 'user').length === 0;
-    
-    setState(prevState => ({
-        ...prevState,
-        conversations: prevState.conversations.map(c => 
-            c.id === activeId 
-            ? { ...c, 
-                messages: [...c.messages, userMessage],
-                title: isFirstUserMessage ? text.substring(0, 40) : c.title,
-              }
-            : c
-        )
-    }));
+    if (isFirstUserMessage && activeId) {
+        setState(prevState => ({
+            ...prevState,
+            conversations: prevState.conversations.map(c => 
+                c.id === activeId ? { ...c, title: text.substring(0, 40) } : c
+            )
+        }));
+    }
     
     setCurrentAiMessage('');
     setStreaming(true);
@@ -94,9 +100,7 @@ export const useChat = () => {
       const stream = geminiService.sendMessageStream(text);
       let accumulatedText = '';
       for await (const chunk of stream) {
-        if (isInterruptedRef.current) {
-          break;
-        }
+        if (isInterruptedRef.current) break;
         accumulatedText += chunk;
         setCurrentAiMessage(accumulatedText);
       }
@@ -108,14 +112,7 @@ export const useChat = () => {
           text: accumulatedText.trim(),
           ts: new Date().toISOString(),
         };
-         setState(prevState => ({
-            ...prevState,
-            conversations: prevState.conversations.map(c => 
-                c.id === activeId 
-                ? { ...c, messages: [...c.messages, aiMessage] }
-                : c
-            )
-        }));
+        addMessage(aiMessage);
       }
     } catch (error) {
       console.error('Error streaming from Gemini:', error);
@@ -125,20 +122,13 @@ export const useChat = () => {
           text: 'Sorry, I encountered an error. Please check your API key and try again.',
           ts: new Date().toISOString(),
       };
-      setState(prevState => ({
-        ...prevState,
-        conversations: prevState.conversations.map(c => 
-            c.id === activeId 
-            ? { ...c, messages: [...c.messages, errorMessage] }
-            : c
-        )
-      }));
+      addMessage(errorMessage);
     } finally {
       setStreaming(false);
       setCurrentAiMessage('');
       isInterruptedRef.current = false;
     }
-  }, [activeId, activeConversation]);
+  }, [activeId, activeConversation, addMessage]);
   
   const interrupt = useCallback(() => {
     isInterruptedRef.current = true;
@@ -186,5 +176,6 @@ export const useChat = () => {
     startNewConversation,
     switchConversation,
     deleteConversation,
+    addMessage,
   };
 };

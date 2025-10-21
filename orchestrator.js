@@ -1,28 +1,32 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { generateImage } from './services/imageGenerator.js';
+import { GoogleGenAI } from "@google/genai";
 
-// backend/orchestrator.js
-const fs = require('fs');
-const path = require('path');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const AGENTS_FILE = path.join(__dirname, 'agentsRegistry.json');
+
+// Initialize Gemini
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const model = 'gemini-2.5-flash';
 
 class Orchestrator {
   constructor() {
     this.agents = [];
     this.tasks = [];
-    this.taskOutputs = {};
     this.sockets = new Set();
     this.loadAgents();
-    this.startMockTaskScheduler();
   }
 
   loadAgents() {
     try {
       const raw = fs.readFileSync(AGENTS_FILE, 'utf8');
-      const j = JSON.parse(raw);
-      this.agents = j.agents || [];
+      this.agents = JSON.parse(raw).agents || [];
     } catch (e) {
       console.warn('Could not load agents registry', e);
-      this.agents = [];
     }
   }
 
@@ -43,67 +47,101 @@ class Orchestrator {
     this.broadcast('log', { message: `Agent ${name} engine updated to ${engine}`, time: new Date().toISOString() });
     return agent;
   }
-
-  addTask(task) {
-    task.id = `t_${Date.now()}`;
-    task.status = 'queued';
-    task.title = task.title || 'Untitled Task';
+  
+  createTaskFromPrompt(prompt) {
+    const isImageTask = prompt.toLowerCase().includes('generate an image');
+    
+    let task = {
+        id: `task_${Date.now()}`,
+        prompt,
+        status: 'queued',
+        type: isImageTask ? 'image' : 'text',
+        title: `${prompt.substring(0, 50)}...`,
+    };
+    
     this.tasks.push(task);
     this.broadcast('task-update', task);
-    this.assignTaskToAgent(task);
+    this.assignAndExecuteTask(task);
   }
 
-  assignTaskToAgent(task) {
-    const match = this.agents.find(a =>
-      a.primarySpecialty === task.type ||
-      (a.secondarySpecialties || []).includes(task.type)
-    ) || this.agents[0];
-
-    if (!match) {
-      task.status = 'failed';
-      this.broadcast('task-update', task);
-      return;
-    }
-
-    task.assignedAgent = match.name;
+  async assignAndExecuteTask(task) {
     task.status = 'running';
     this.broadcast('task-update', task);
-    this.broadcast('log', { message: `Task ${task.id} assigned to ${match.name}`, time: new Date().toISOString() });
+    this.broadcast('log', { message: `Task "${task.title}" received. Renee is analyzing...`, time: new Date().toISOString() });
 
-    setTimeout(() => {
-      task.status = 'done';
-      task.completedAt = new Date().toISOString();
-      this.taskOutputs[task.id] = { content: `Simulated output for task ${task.id}` };
-      this.broadcast('task-update', task);
-      this.broadcast('log', { message: `Task ${task.id} completed.`, time: new Date().toISOString() });
-    }, task.simulatedDuration || 5000);
-  }
+    try {
+        // 1. Ask Renee to select an agent
+        const agentList = this.agents
+            .filter(a => a.name !== 'Renee')
+            .map(a => `- ${a.name}: Primary specialty is ${a.primarySpecialty}. Secondary specialties: ${a.secondarySpecialties.join(', ')}. Description: ${a.description}`)
+            .join('\n');
+        
+        const selectionPrompt = `User prompt: "${task.prompt}"
+        
+        Based on the user prompt, which of the following agents is best suited for this task?
+        
+        Available agents:
+        ${agentList}
+        
+        Respond with only the agent's name.`;
 
-  getTaskOutput(id) {
-    return this.taskOutputs[id] || null;
-  }
+        const selectionResult = await ai.models.generateContent({
+            model: 'gemini-2.5-pro', // Use a powerful model for routing
+            contents: selectionPrompt,
+        });
+        const selectedAgentName = selectionResult.text.trim();
 
-  startMockTaskScheduler() {
-    setInterval(() => {
-        if (this.sockets.size > 0) { // Only create tasks if clients are connected
-            this.addTask({
-                type: 'text',
-                title: 'Generate weekly report',
-                simulatedDuration: Math.random() * 5000 + 3000
-            });
+        const agent = this.agents.find(a => a.name === selectedAgentName);
+
+        if (!agent || agent.name === 'Renee') {
+            throw new Error(`Renee selected an invalid agent: '${selectedAgentName}'. Task failed.`);
         }
-    }, 15000);
+
+        task.assignedAgent = agent.name;
+        this.broadcast('task-update', task);
+        this.broadcast('log', { message: `Renee assigned task to ${agent.name}.`, time: new Date().toISOString() });
+        this.broadcast('log', { message: `${agent.name} is executing the task...`, time: new Date().toISOString() });
+        
+        // 2. Execute task with the selected agent
+        const executionPrompt = `As an AI agent whose primary specialty is "${agent.primarySpecialty}", fulfill this request decisively and expertly: "${task.prompt}"`;
+        
+        let output;
+        
+        // Special handling for image generation task which uses a specific service
+        if (agent.primarySpecialty === 'art' && task.type === 'image') {
+            output = { type: 'image', content: await generateImage(task.prompt) };
+        } else {
+            const executionResult = await ai.models.generateContent({
+                model: agent.currentEngine || model,
+                contents: executionPrompt,
+            });
+            output = { type: 'text', content: executionResult.text };
+        }
+        
+        task.status = 'done';
+        task.completedAt = new Date().toISOString();
+        task.output = output;
+        
+        this.broadcast('task-update', task);
+        this.broadcast('log', { message: `Task completed by ${agent.name}.`, time: new Date().toISOString() });
+
+    } catch (error) {
+        console.error(`Task ${task.id} failed:`, error);
+        task.status = 'failed';
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        task.output = { type: 'text', content: errorMessage };
+        this.broadcast('task-update', task);
+        this.broadcast('log', { message: `Task failed. Error: ${errorMessage}`, time: new Date().toISOString() });
+    }
   }
-  
+
   registerSocket(s) {
     this.sockets.add(s);
     s.emit('agents', this.agents);
     s.emit('tasks', this.tasks);
   }
 
-  unregisterSocket(s) {
-    this.sockets.delete(s);
-  }
+  unregisterSocket(s) { this.sockets.delete(s); }
 
   broadcast(event, data) {
     this.sockets.forEach(s => {
@@ -112,4 +150,4 @@ class Orchestrator {
   }
 }
 
-module.exports = new Orchestrator();
+export default new Orchestrator();
