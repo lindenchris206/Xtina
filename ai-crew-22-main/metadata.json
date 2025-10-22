@@ -1,0 +1,7 @@
+{
+  "name": "Chris' AI WORKCREW",
+  "description": "An advanced AI-powered crew of 22 specialists to assist with any project. Led by Commander Astra, the crew collaborates to analyze tasks, generate code, create files, and provide comprehensive solutions, simulating interactions with various AI models to deliver the best results.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
